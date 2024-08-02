@@ -1,20 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:signals/signals.dart';
+import 'package:signals/signals_flutter_extended.dart';
+
+import 'ui/app.dart';
+import 'ui/theme.dart';
 
 void main() {
-  runApp(const MainApp());
-}
-
-class MainApp extends StatelessWidget {
-  const MainApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: Scaffold(
-        body: Center(
-          child: Text('Hello World!'),
-        ),
-      ),
-    );
-  }
+  runApp(
+    SignalProvider.value(
+      value: signal(AppTheme()),
+      child: const App(),
+    ),
+  );
 }
