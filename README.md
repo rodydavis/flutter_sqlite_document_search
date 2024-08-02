@@ -1,6 +1,8 @@
 # flutter_sqlite_document_search
 
-1. Create env.json
+Local SQLite embeddings with [sqlite-vec](https://github.com/asg017/sqlite-vec).
+
+1. Create env.json - [Get an API key](https://aistudio.google.com/app/apikey)
 
 ```json
 {
@@ -16,3 +18,12 @@ make run_macos
 ```
 
 3. Add markdown and text files in the app to query against.
+
+## Platforms Verified
+
+- [X] MacOS
+- [ ] iOS
+- [ ] Android
+- [ ] Linux
+- [ ] Web
+- [ ] Windows
