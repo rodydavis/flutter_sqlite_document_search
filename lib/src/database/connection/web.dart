@@ -9,16 +9,8 @@ DatabaseConnection connect(String name) {
   return DatabaseConnection.delayed(Future(() async {
     final db = await WasmDatabase.open(
       databaseName: name,
-      sqlite3Uri: Uri.parse(kDebugMode ? 'sqlite.debug.wasm' : 'sqlite3.wasm'),
+      sqlite3Uri: Uri.parse('sqlite3_vec.wasm'),
       driftWorkerUri: Uri.parse('drift_worker.js'),
-      localSetup: (db) async {
-        db.execute(
-          'CREATE VIRTUAL TABLE IF NOT EXISTS chunks using vec0( '
-          '  id INTEGER PRIMARY KEY AUTOINCREMENT, '
-          '  embedding float[768] '
-          ');',
-        );
-      },
     );
 
     if (db.missingFeatures.isNotEmpty) {

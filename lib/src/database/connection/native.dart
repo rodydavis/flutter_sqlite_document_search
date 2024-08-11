@@ -35,14 +35,6 @@ DatabaseConnection connect(String name) {
 
     return NativeDatabase.createBackgroundConnection(
       await databaseFile(name),
-      setup: (db) async {
-        db.execute(
-          'CREATE VIRTUAL TABLE IF NOT EXISTS chunks using vec0( '
-          '  id INTEGER PRIMARY KEY AUTOINCREMENT, '
-          '  embedding float[768] '
-          ');',
-        );
-      },
     );
   }));
 }

@@ -21,9 +21,9 @@ make run_macos
 
 ## Platforms Verified
 
+- [X] Web
 - [X] MacOS
 - [ ] iOS
 - [ ] Android
 - [ ] Linux
-- [ ] Web
 - [ ] Windows

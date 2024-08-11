@@ -8,7 +8,7 @@ part 'database.g.dart';
 
 @DriftDatabase(include: {'sql.drift'})
 class Database extends _$Database {
-  Database() : super(impl.connect('app.v2'));
+  Database() : super(impl.connect('app.v5'));
 
   Database.forTesting(DatabaseConnection super.connection);
 
@@ -60,6 +60,19 @@ class Database extends _$Database {
       [id],
     );
   }
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+        onCreate: (m) async {
+          await m.createAll();
+          m.database.customStatement(
+            'CREATE VIRTUAL TABLE IF NOT EXISTS chunks using vec0( '
+            '  id INTEGER PRIMARY KEY AUTOINCREMENT, '
+            '  embedding float[768] '
+            ');',
+          );
+        },
+      );
 }
 
 // Serializes a float32 list into a vector BLOB that sqlite-vec accepts.
