@@ -13,6 +13,7 @@ Local SQLite embeddings with [sqlite-vec](https://github.com/asg017/sqlite-vec).
 2. Run the following:
 
 ```bash
+make deps
 make build_files
 make run_macos
 ```
@@ -23,7 +24,7 @@ make run_macos
 
 - [X] Web
 - [X] MacOS
-- [ ] iOS
-- [ ] Android
-- [ ] Linux
-- [ ] Windows
+- [X] iOS
+- [X] Android
+- [X] Linux
+- [X] Windows

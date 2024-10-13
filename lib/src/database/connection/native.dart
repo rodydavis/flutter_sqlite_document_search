@@ -1,12 +1,11 @@
-import 'dart:ffi';
 import 'dart:io';
 
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
-import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqlite3/sqlite3.dart';
+import 'package:sqlite_vec/sqlite_vec.dart' as sqlite_vec;
 import 'package:sqlite3_flutter_libs/sqlite3_flutter_libs.dart';
 
 Future<File> databaseFile(String name) async {
@@ -30,44 +29,11 @@ DatabaseConnection connect(String name) {
     }
 
     sqlite3.ensureExtensionLoaded(
-      SqliteExtension.inLibrary(_loadLibrary('vec0'), 'sqlite3_vec_init'),
+      SqliteExtension.inLibrary(sqlite_vec.vec0, 'sqlite3_vec_init'),
     );
 
     return NativeDatabase.createBackgroundConnection(
       await databaseFile(name),
     );
   }));
-}
-
-DynamicLibrary _loadLibrary(String name) {
-  if (Platform.isIOS || Platform.isMacOS) {
-    return DynamicLibrary.open('$name.dylib');
-  }
-  if (Platform.isAndroid || Platform.isLinux) {
-    return DynamicLibrary.open('$name.so');
-  }
-  if (Platform.isWindows) {
-    return DynamicLibrary.open(() {
-      if (kDebugMode) {
-        return p.normalize(p.join(
-          Directory.current.path,
-          'extensions',
-          '$name.dll',
-        ));
-      } else {
-        final assets = p.normalize(
-          p.join(
-            'data',
-            'flutter_assets',
-            'packages',
-            'flutter_sqlite_document_search',
-            'extensions',
-          ),
-        );
-        final exe = File(Platform.resolvedExecutable).parent.path;
-        return p.normalize(p.join(exe, assets, '$name.dll'));
-      }
-    }());
-  }
-  throw UnsupportedError('Unknown platform: ${Platform.operatingSystem}');
 }
