@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:mediapipe_text/mediapipe_text.dart';
 import 'package:signals/signals_flutter.dart';
 
 import '../src/database/database.dart';
 import 'details.dart';
 
 class SearchDocs extends StatefulWidget {
-  const SearchDocs({super.key});
+  const SearchDocs({super.key, required this.textEmbedder});
+
+  final TextEmbedder textEmbedder;
 
   @override
   State<SearchDocs> createState() => _SearchDocsState();
@@ -18,8 +21,12 @@ class _SearchDocsState extends State<SearchDocs> {
   Future<void> search() async {
     final str = controller.text.trim();
     if (str.isEmpty) return;
-    final results = await Database.instance.searchChunks(str);
-    results$.value = await results.get();
+    final results = await Database.instance.searchChunks(
+      str,
+      textEmbedder: widget.textEmbedder,
+    );
+    final list = await results.get();
+    results$.value = list;
   }
 
   @override

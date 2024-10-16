@@ -1,5 +1,8 @@
+import 'dart:typed_data';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:mediapipe_text/mediapipe_text.dart';
 import 'package:signals/signals_flutter.dart';
 
 import '../src/database/database.dart';
@@ -14,8 +17,21 @@ class Docs extends StatefulWidget {
 }
 
 class _DocsState extends State<Docs> {
+  Future<void> loadModel(BuildContext context) async {
+    ByteData? embedderBytes = await DefaultAssetBundle.of(context).load(
+      'assets/universal-sentence-encoder.tflite',
+    );
+
+    embedder.value = TextEmbedder(
+      TextEmbedderOptions.fromAssetBuffer(
+        embedderBytes.buffer.asUint8List(),
+      ),
+    );
+  }
+
   late final docs$ = Database.instance.getFiles().watch().toSignal();
   final loading = signal(false);
+  final embedder = signal<TextEmbedder?>(null);
 
   Future<void> addFile() async {
     loading.value = true;
@@ -37,7 +53,10 @@ class _DocsState extends State<Docs> {
             .then((e) => e.first.id);
         final chunks = chunkText(str);
         for (final chunk in chunks) {
-          final chunkId = await db.addChunk(chunk.$1);
+          final chunkId = await db.addChunk(
+            chunk.$1,
+            textEmbedder: embedder()!,
+          );
           await db.insertFileEmbedding(fileId, chunkId, chunk.$2, chunk.$3);
         }
       });
@@ -49,7 +68,25 @@ class _DocsState extends State<Docs> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      loadModel(context);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (embedder.watch(context) == null) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Flutter AI Docs Search'),
+        ),
+        body: const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
     return Scaffold(
       appBar: AppBar(
         title: const Text('Flutter AI Docs Search'),
@@ -58,7 +95,9 @@ class _DocsState extends State<Docs> {
             icon: const Icon(Icons.search),
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute(
-                builder: (context) => const SearchDocs(),
+                builder: (context) => SearchDocs(
+                  textEmbedder: embedder()!,
+                ),
               ),
             ),
           ),

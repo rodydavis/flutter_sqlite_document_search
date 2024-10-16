@@ -1,41 +1,38 @@
 import 'dart:typed_data';
 
 import 'package:drift/drift.dart';
+import 'package:mediapipe_text/mediapipe_text.dart';
 import 'connection/connection.dart' as impl;
-import 'package:google_generative_ai/google_generative_ai.dart';
 
 part 'database.g.dart';
 
 @DriftDatabase(include: {'sql.drift'})
 class Database extends _$Database {
-  Database() : super(impl.connect('app.v5'));
+  Database() : super(impl.connect('app.offline.sqlite'));
 
   Database.forTesting(DatabaseConnection super.connection);
 
   static Database instance = Database();
 
+  static int dimensions = 100; //512;
+
   @override
   int get schemaVersion => 1;
-
-  final textEmbedder = GenerativeModel(
-    model: 'text-embedding-004',
-    apiKey: const String.fromEnvironment('GOOGLE_AI_API_KEY'),
-  );
 
   Future<int> addChunk(
     String text, {
     String? title,
     int? outputDimensionality,
+    required TextEmbedder textEmbedder,
   }) async {
-    final result = await textEmbedder.embedContent(
-      Content.text(text),
-      taskType: TaskType.retrievalDocument,
-      title: title,
-      outputDimensionality: outputDimensionality,
-    );
+    final result = await textEmbedder.embed(text);
+    final vec = result.embeddings.firstOrNull?.floatEmbedding;
+    if (vec == null) {
+      throw Exception('Failed to embed text');
+    }
     await customStatement(
       'INSERT INTO chunks (embedding) VALUES (:embedding)',
-      [_serializeFloat32(result.embedding.values)],
+      [_serializeFloat32(vec)],
     );
     return await getLastId().getSingle();
   }
@@ -44,14 +41,14 @@ class Database extends _$Database {
     String query, {
     String? title,
     int? outputDimensionality,
+    required TextEmbedder textEmbedder,
   }) async {
-    final result = await textEmbedder.embedContent(
-      Content.text(query),
-      taskType: TaskType.retrievalQuery,
-      title: title,
-      outputDimensionality: outputDimensionality,
-    );
-    return searchEmbeddings(_serializeFloat32(result.embedding.values));
+    final result = await textEmbedder.embed(query);
+    final vec = result.embeddings.firstOrNull?.floatEmbedding;
+    if (vec == null) {
+      throw Exception('Failed to embed query');
+    }
+    return searchEmbeddings(_serializeFloat32(vec));
   }
 
   Future<void> deleteChunk(int id) async {
@@ -68,7 +65,7 @@ class Database extends _$Database {
           m.database.customStatement(
             'CREATE VIRTUAL TABLE IF NOT EXISTS chunks using vec0( '
             '  id INTEGER PRIMARY KEY AUTOINCREMENT, '
-            '  embedding float[768] '
+            '  embedding float[$dimensions] '
             ');',
           );
         },

@@ -12,8 +12,9 @@ dependencies:
   file_picker: ^8.0.6
   flutter:
     sdk: flutter
-  flutter_markdown: ^0.7.3
-  google_generative_ai: ^0.4.4
+  flutter_markdown: ^0.7.3 
+  mediapipe_core: ^0.0.1
+  mediapipe_text: ^0.0.1
   html: ^0.15.4
   markdown: ^7.2.2
   path: ^1.9.0
@@ -35,3 +36,5 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/universal-sentence-encoder.tflite
