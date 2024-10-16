@@ -1,7 +1,6 @@
 # flutter_sqlite_document_search
 
-Local SQLite embeddings with [sqlite-vec](https://github.com/asg017/sqlite-vec).
-
+Local SQLite embeddings with [sqlite-vec](https://github.com/asg017/sqlite-vec) and [MediaPipe](https://github.com/google/flutter-mediapipe/tree/main/packages/mediapipe-task-text).
 
 ## Getting Started
 
