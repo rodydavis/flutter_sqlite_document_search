@@ -6,7 +6,7 @@ import 'package:mediapipe_text/mediapipe_text.dart';
 import 'package:signals/signals_flutter.dart';
 
 import '../src/database/database.dart';
-import 'details.dart';
+import 'card.dart';
 import 'search.dart';
 
 class Docs extends StatefulWidget {
@@ -31,9 +31,10 @@ class _DocsState extends State<Docs> {
 
   late final docs$ = Database.instance.getFiles().watch().toSignal();
   final loading = signal(false);
+  final fab = signal(true);
   final embedder = signal<TextEmbedder?>(null);
 
-  Future<void> addFile() async {
+  Future<void> importFile() async {
     loading.value = true;
     try {
       final result = await FilePicker.platform.pickFiles(
@@ -46,20 +47,7 @@ class _DocsState extends State<Docs> {
       }
       final file = result.xFiles.first;
       final str = await file.readAsString();
-      final db = Database.instance;
-      await db.transaction(() async {
-        final fileId = await db //
-            .insertFile(file.path, str)
-            .then((e) => e.first.id);
-        final chunks = chunkText(str);
-        for (final chunk in chunks) {
-          final chunkId = await db.addChunk(
-            chunk.$1,
-            textEmbedder: embedder()!,
-          );
-          await db.insertFileEmbedding(fileId, chunkId, chunk.$2, chunk.$3);
-        }
-      });
+      await addFile(file.name, str, embedder()!);
     } catch (err) {
       debugPrint('error embedding content: $err');
     } finally {
@@ -92,6 +80,12 @@ class _DocsState extends State<Docs> {
         title: const Text('Flutter AI Docs Search'),
         actions: [
           IconButton(
+            icon: const Icon(Icons.file_upload),
+            onPressed: () async {
+              await importFile();
+            },
+          ),
+          IconButton(
             icon: const Icon(Icons.search),
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute(
@@ -101,6 +95,14 @@ class _DocsState extends State<Docs> {
               ),
             ),
           ),
+          Builder(builder: (context) {
+            return IconButton(
+              icon: const Icon(Icons.add),
+              onPressed: () async {
+                await showContentEdit(context, embedder()!);
+              },
+            );
+          }),
         ],
       ),
       body: Column(
@@ -118,13 +120,9 @@ class _DocsState extends State<Docs> {
                       itemCount: items.length,
                       itemBuilder: (context, index) {
                         final item = items[index];
-                        return ListTile(
-                          title: Text(item.path),
-                          onTap: () => Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (context) => DocDetails(fileId: item.id),
-                            ),
-                          ),
+                        return DocCard(
+                          file: item,
+                          embedder: embedder()!,
                         );
                       },
                     );
@@ -138,10 +136,6 @@ class _DocsState extends State<Docs> {
                 ),
           ),
         ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: loading.watch(context) ? null : addFile,
-        child: const Icon(Icons.add),
       ),
     );
   }

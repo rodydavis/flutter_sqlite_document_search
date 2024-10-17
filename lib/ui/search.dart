@@ -3,7 +3,7 @@ import 'package:mediapipe_text/mediapipe_text.dart';
 import 'package:signals/signals_flutter.dart';
 
 import '../src/database/database.dart';
-import 'details.dart';
+import 'card.dart';
 
 class SearchDocs extends StatefulWidget {
   const SearchDocs({super.key, required this.textEmbedder});
@@ -67,26 +67,16 @@ class _SearchDocsState extends State<SearchDocs> {
             itemCount: results.length,
             itemBuilder: (context, index) {
               final item = results[index];
-              final rank = item.distance.clamp(0, 1);
-              final rankDesc = ((1 - rank) * 100).toStringAsFixed(0);
-              return ListTile(
-                title: Text(item.path ?? ''),
-                subtitle: Text(switch (rank) {
-                  < 0.7 => 'Close Match ($rankDesc%)',
-                  < 0.9 => 'Average Match ($rankDesc%)',
-                  (_) => 'Distant Match ($rankDesc%)',
-                }),
-                trailing: item.fileId != null
-                    ? const Icon(Icons.chevron_right)
-                    : null,
-                onTap: item.fileId == null
-                    ? null
-                    : () => Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                DocDetails(fileId: item.fileId!),
-                          ),
-                        ),
+              // final rank = item.distance.clamp(0, 1);
+              // final rankDesc = ((1 - rank) * 100).toStringAsFixed(0);
+              final file = File(
+                id: item.fileId!,
+                path: item.path!,
+                content: item.content ?? '',
+              );
+              return DocCard(
+                file: file,
+                embedder: widget.textEmbedder,
               );
             },
           );
