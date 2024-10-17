@@ -31,7 +31,7 @@ class Database extends _$Database {
       throw Exception('Failed to embed text');
     }
     await customStatement(
-      'INSERT INTO chunks (embedding) VALUES (:embedding)',
+      'INSERT INTO chunks (embedding) VA (:embedding)',
       [_serializeFloat32(vec)],
     );
     return await getLastId().getSingle();
